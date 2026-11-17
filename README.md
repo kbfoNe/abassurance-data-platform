@@ -80,3 +80,78 @@ feature/prediction-model
 fix/data-validation
 test/pipeline
 docs/architecture
+
+---
+
+## Structure du projet
+
+```text
+abassurance-data-platform/
+│
+├── data/
+│   ├── raw/
+│   │   └── claims.csv
+│   └── processed/
+│       └── claims_clean.csv
+│
+├── src/
+│   ├── src/
+│   │   └── pipeline.py
+│   └── main.py
+│
+├── tests/
+│   └── test_main.py
+│
+├── requirements.txt
+└── README.md
+```
+
+## Fonctionnement du pipeline
+
+Le pipeline assure le nettoyage et le contrôle qualité des données de sinistres.
+
+Les principales étapes sont :
+
+1. Lecture du fichier CSV source.
+2. Vérification de la présence des colonnes obligatoires.
+3. Détection des montants manquants et négatifs.
+4. Identification des doublons.
+5. Séparation des données acceptées et rejetées.
+6. Remplacement des scores de fraude manquants par zéro pour les données acceptées.
+7. Export des résultats dans des fichiers CSV distincts.
+
+Les données rejetées sont conservées avec leur motif de rejet afin de faciliter leur analyse.
+
+## Installation
+
+Prérequis : Python 3.10 ou supérieur.
+
+Installation des dépendances :
+
+```bash
+pip install -r requirements.txt
+```
+
+## Exécution du pipeline
+
+Depuis la racine du projet :
+
+```bash
+python -m src.main
+```
+
+Le pipeline lit les données sources dans `data/raw/claims.csv` et génère les résultats dans `data/processed/`.
+
+## Tests
+
+Lancement des tests unitaires :
+
+```bash
+pytest -v
+```
+
+Les tests vérifient notamment la séparation des sinistres acceptés et rejetés ainsi que le traitement des montants invalides.
+
+## Gestion de versions
+
+Les développements sont réalisés sur des branches dédiées. Après vérification et validation, les modifications sont intégrées dans `develop`, puis dans `main` lors d'une livraison stable.
