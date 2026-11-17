@@ -1,2 +1,5 @@
 pandas
 pytest
+scikit-learn
+pylint
+pytest-cov
