@@ -1,4 +1,5 @@
 
+
 """Tests unitaires du nettoyage des données de sinistres."""
 
 import pandas as pd
@@ -6,8 +7,8 @@ import pandas as pd
 from src.src.pipeline import clean_data
 
 
-def test_clean_data_removes_invalid_claims(tmp_path):
-    """Vérifie le traitement des montants manquants et négatifs."""
+def test_clean_data_separates_accepted_and_rejected_claims(tmp_path):
+    """Vérifie la séparation des sinistres acceptés et rejetés."""
     input_file = tmp_path / "claims.csv"
     output_file = tmp_path / "claims_clean.csv"
 
@@ -17,16 +18,21 @@ def test_clean_data_removes_invalid_claims(tmp_path):
     })
     data.to_csv(input_file, index=False)
 
-    result = clean_data(input_file, output_file)
+    accepted, rejected = clean_data(input_file, output_file)
 
-    assert len(result) == 2
-    assert (result["estimated_amount"] >= 0).all()
-    assert result["fraud_score"].isna().sum() == 0
+    assert len(accepted) == 2
+    assert len(rejected) == 2
+    assert (accepted["estimated_amount"] >= 0).all()
+    assert accepted["fraud_score"].isna().sum() == 0
     assert output_file.exists()
 
+    rejected_reasons = rejected["rejection_reason"].tolist()
+    assert "MONTANT_MANQUANT" in rejected_reasons
+    assert "MONTANT_NEGATIF" in rejected_reasons
 
-def test_clean_data_rejects_missing_amount(tmp_path):
-    """Vérifie qu'un sinistre sans montant n'est pas conservé."""
+
+def test_clean_data_rejects_missing_amount_with_reason(tmp_path):
+    """Vérifie le rejet d'un sinistre sans montant."""
     input_file = tmp_path / "claims.csv"
     output_file = tmp_path / "claims_clean.csv"
 
@@ -36,7 +42,29 @@ def test_clean_data_rejects_missing_amount(tmp_path):
     })
     data.to_csv(input_file, index=False)
 
-    result = clean_data(input_file, output_file)
+    accepted, rejected = clean_data(input_file, output_file)
 
-    assert len(result) == 1
-    assert result.iloc[0]["estimated_amount"] == 1200
+    assert len(accepted) == 1
+    assert len(rejected) == 1
+    assert rejected.iloc[0]["rejection_reason"] == "MONTANT_MANQUANT"
+
+    rejected_file = tmp_path / "claims_clean_rejected.csv"
+    assert rejected_file.exists()
+
+
+def test_clean_data_raises_error_when_required_column_is_missing(tmp_path):
+    """Vérifie le contrôle des colonnes obligatoires."""
+    input_file = tmp_path / "claims.csv"
+    output_file = tmp_path / "claims_clean.csv"
+
+    pd.DataFrame({
+        "estimated_amount": [1200],
+    }).to_csv(input_file, index=False)
+
+    try:
+        clean_data(input_file, output_file)
+    except ValueError as error:
+        assert "fraud_score" in str(error)
+    else:
+        raise AssertionError("Une erreur devait être levée.")
+
