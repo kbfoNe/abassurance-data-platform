@@ -5,7 +5,7 @@ import argparse
 
 from pathlib import Path
 
-from src.pipeline import clean_data
+from src.src.pipeline import clean_data
 
 
 def main():
