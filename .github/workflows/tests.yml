@@ -1,15 +1,15 @@
-name: Tests automatisés
+name: Tests Python
 
 on:
   push:
     branches:
-      - main
       - develop
-      - feature/**
+      - main
+      - 'feature/**'
   pull_request:
     branches:
-      - main
       - develop
+      - main
 
 jobs:
   tests:
@@ -19,10 +19,10 @@ jobs:
       - name: Récupérer le code
         uses: actions/checkout@v4
 
-      - name: Installer Python
+      - name: Configurer Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Installer les dépendances
         run: |
